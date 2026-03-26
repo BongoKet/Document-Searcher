@@ -1,5 +1,5 @@
 """
-SQLite-backed search index for Excel Search v5.
+SQLite-backed search index for Document Searcher.
 
 Stores extracted text content from Excel, Word, and PDF files.
 Files are tracked by path, mtime, and size -- stale entries are
@@ -10,7 +10,7 @@ import os
 import sqlite3
 from pathlib import Path
 
-DEFAULT_DB_DIR = os.path.join(Path.home(), ".excel-search")
+DEFAULT_DB_DIR = os.path.join(Path.home(), ".document-searcher")
 DEFAULT_DB_PATH = os.path.join(DEFAULT_DB_DIR, "index.db")
 
 SCHEMA = """
@@ -99,12 +99,13 @@ class SearchIndex:
         Search indexed content. Returns list of
         { file, location, section, value }.
         """
+        escaped_query = query.replace("%", "\\%").replace("_", "\\_")
         if case_sensitive:
-            like = f"%{query}%"
-            clause = "content.text LIKE ? COLLATE BINARY"
+            like = f"%{escaped_query}%"
+            clause = "content.text LIKE ? ESCAPE '\\' COLLATE BINARY"
         else:
-            like = f"%{query.lower()}%"
-            clause = "LOWER(content.text) LIKE ?"
+            like = f"%{escaped_query.lower()}%"
+            clause = "LOWER(content.text) LIKE ? ESCAPE '\\'"
 
         sql = f"""
             SELECT files.path, content.location, content.section, content.text
@@ -115,9 +116,8 @@ class SearchIndex:
         params = [like]
 
         if folders:
-            placeholders = ",".join("?" for _ in folders)
             folder_clauses = " OR ".join(
-                f"files.path LIKE ?" for _ in folders
+                "files.path LIKE ? ESCAPE '\\'" for _ in folders
             )
             sql += f" AND ({folder_clauses})"
             for f in folders:

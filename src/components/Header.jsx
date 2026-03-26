@@ -18,8 +18,7 @@ export default function Header({ onOpenSettings }) {
             <rect x="3" y="3" width="18" height="18" rx="2" />
             <path d="M3 9h18M9 3v18M3 15h18" />
           </svg>
-          <span className="app-title">Excel Search</span>
-          <span className="version-badge">v5</span>
+          <span className="app-title">Document Searcher</span>
         </div>
         <div className="header-right">
           <button

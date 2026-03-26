@@ -23,12 +23,10 @@ function highlightMatch(text, query, caseSensitive) {
   const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const flags = caseSensitive ? "g" : "gi";
   const re = new RegExp(`(${escaped})`, flags);
-  const parts = text.split(re);
-  return parts
-    .map((part) =>
-      re.test(part) ? `<mark>${escapeHtml(part)}</mark>` : escapeHtml(part)
-    )
-    .join("");
+  return escapeHtml(text).replace(
+    new RegExp(`(${escapeHtml(escaped)})`, flags),
+    "<mark>$1</mark>"
+  );
 }
 
 function OpenIcon() {
@@ -52,8 +50,8 @@ export default function ResultsTable({
   isSearching,
   done,
   onClear,
-  selectedRow,
-  onSelectRow,
+  selectedResult,
+  onSelectResult,
 }) {
   const [filter, setFilter] = useState("");
   const [sortKey, setSortKey] = useState(null);
@@ -115,7 +113,7 @@ export default function ResultsTable({
     const url = URL.createObjectURL(blob);
     const a = Object.assign(document.createElement("a"), {
       href: url,
-      download: "excel-search-results.csv",
+      download: "document-searcher-results.csv",
     });
     a.click();
     URL.revokeObjectURL(url);
@@ -237,12 +235,12 @@ export default function ResultsTable({
                   </tr>
                 );
               }
-              const isSelected = selectedRow === i;
+              const isSelected = selectedResult === row;
               return (
                 <tr
                   key={i}
                   className={isSelected ? "selected" : ""}
-                  onClick={() => onSelectRow(i)}
+                  onClick={() => onSelectResult(row)}
                 >
                   <td title={row.file || ""}>
                     <span

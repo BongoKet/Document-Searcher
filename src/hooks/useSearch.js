@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 
 const initialState = {
   isSearching: false,
@@ -10,12 +10,12 @@ const initialState = {
   progressLabel: "",
   lastQuery: "",
   done: false,
+  errorMessage: null,
+  previewData: null,
 };
 
-export default function useSearch(tabId) {
+export default function useSearch() {
   const [state, setState] = useState(initialState);
-  const stateRef = useRef(state);
-  stateRef.current = state;
 
   const handleMessage = useCallback((msg) => {
     setState((prev) => {
@@ -120,6 +120,10 @@ export default function useSearch(tabId) {
     setState(initialState);
   }, []);
 
+  const clearError = useCallback(() => {
+    setState((prev) => ({ ...prev, errorMessage: null }));
+  }, []);
+
   const requestPreview = useCallback((file, location) => {
     if (!window.electronAPI) return;
     window.electronAPI.requestPreview({ file, location });
@@ -133,5 +137,5 @@ export default function useSearch(tabId) {
     };
   }, []);
 
-  return { ...state, startSearch, stopSearch, clearResults, requestPreview };
+  return { ...state, startSearch, stopSearch, clearResults, clearError, requestPreview };
 }

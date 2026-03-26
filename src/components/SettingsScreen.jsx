@@ -208,7 +208,7 @@ export default function SettingsScreen({ onClose }) {
         </div>
         <div className="settings-row">
           <div className="settings-row-label">Current version</div>
-          <span style={{ color: "var(--text-muted)", fontSize: 12 }}>5.0.0</span>
+          <span style={{ color: "var(--text-muted)", fontSize: 12 }}>Document Searcher 5.0.0</span>
         </div>
       </div>
 

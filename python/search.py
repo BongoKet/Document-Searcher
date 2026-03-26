@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Excel Search v5 - Python Search Backend
+Document Searcher - Python Search Backend
 
 Communicates with the Electron frontend via newline-delimited JSON
 over stdin/stdout. Spawn with `python -u search.py` to ensure
@@ -248,9 +248,17 @@ def extract_pdf(filepath: str) -> list:
 
 def preview_xlsx(filepath: str, location: str) -> dict:
     import openpyxl
+    import re
     wb = openpyxl.load_workbook(filepath, read_only=True, data_only=True)
     try:
+        sheet_match = re.match(r"^([A-Z]+)(\d+)$", location)
+        target_sheet = None
+        if "!" in location:
+            target_sheet = location.split("!")[0]
+
         for sheet_name in wb.sheetnames:
+            if target_sheet and sheet_name != target_sheet:
+                continue
             ws = wb[sheet_name]
             rows = []
             for row in ws.iter_rows(max_row=100, max_col=26):
@@ -258,7 +266,7 @@ def preview_xlsx(filepath: str, location: str) -> dict:
                     str(cell.value) if cell.value is not None else ""
                     for cell in row
                 ])
-            if any(location == cell_val for row in rows for cell_val in row) or True:
+            if rows:
                 return {"content": rows, "format": "table"}
     finally:
         wb.close()
@@ -268,6 +276,7 @@ def preview_xlsx(filepath: str, location: str) -> dict:
 def preview_xls(filepath: str, location: str) -> dict:
     import xlrd
     wb = xlrd.open_workbook(filepath)
+    best_rows = []
     for i in range(wb.nsheets):
         ws = wb.sheet_by_index(i)
         rows = []
@@ -277,8 +286,11 @@ def preview_xls(filepath: str, location: str) -> dict:
                 val = ws.cell_value(row_idx, col_idx)
                 row.append(str(val) if val else "")
             rows.append(row)
-        return {"content": rows, "format": "table"}
-    return {"content": [], "format": "table"}
+        if not best_rows:
+            best_rows = rows
+        if ws.name in location:
+            return {"content": rows, "format": "table"}
+    return {"content": best_rows, "format": "table"}
 
 
 def preview_docx(filepath: str, location: str) -> dict:

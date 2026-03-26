@@ -2,7 +2,34 @@ node_modules/
 dist_electron/
 renderer/dist/
 build/search/
-*.exe
+
+# Python
 __pycache__/
 *.pyc
+*.pyo
+venv/
+.venv/
+*.egg-info/
+.pytest_cache/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Env / secrets
 .env
+.env.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Packaged binaries
+resources/search.exe
+resources/search
+dist/

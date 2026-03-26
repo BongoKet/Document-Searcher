@@ -154,6 +154,16 @@ function spawnPython(entry) {
   const proc = spawn(cmd, args);
   entry.buffer = "";
 
+  proc.on("error", (err) => {
+    if (!entry.win.isDestroyed()) {
+      entry.win.webContents.send("search-update", {
+        type: "error",
+        message: `Failed to start search backend: ${err.message}`,
+      });
+    }
+    entry.pythonProcess = null;
+  });
+
   proc.stdout.on("data", (chunk) => {
     entry.buffer += chunk.toString();
     const lines = entry.buffer.split("\n");

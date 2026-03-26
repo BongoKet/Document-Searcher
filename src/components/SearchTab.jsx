@@ -7,12 +7,13 @@ import ErrorToast from "./ErrorToast";
 import useSearch from "../hooks/useSearch";
 import useHistory from "../hooks/useHistory";
 
-export default function SearchTab({ tabId }) {
-  const search = useSearch(tabId);
-  const { history, addEntry, clearAll, refresh } = useHistory();
-  const [selectedRow, setSelectedRow] = useState(null);
+export default function SearchTab() {
+  const search = useSearch();
+  const { history, addEntry, clearAll } = useHistory();
+  const [selectedResult, setSelectedResult] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
   const [error, setError] = useState(null);
+  const [caseSensitive, setCaseSensitive] = useState(false);
 
   const handleSearch = useCallback(
     (options) => {
@@ -29,8 +30,9 @@ export default function SearchTab({ tabId }) {
         return;
       }
       setError(null);
-      setSelectedRow(null);
+      setSelectedResult(null);
       setShowPreview(false);
+      setCaseSensitive(options.case_sensitive);
       search.startSearch(options);
 
       addEntry({
@@ -47,11 +49,10 @@ export default function SearchTab({ tabId }) {
     [search, addEntry]
   );
 
-  const handleSelectRow = useCallback(
-    (idx) => {
-      setSelectedRow(idx);
+  const handleSelectResult = useCallback(
+    (row) => {
+      setSelectedResult(row);
       setShowPreview(true);
-      const row = search.results[idx];
       if (row && row.kind === "result") {
         search.requestPreview(row.file, row.cell);
       }
@@ -61,12 +62,14 @@ export default function SearchTab({ tabId }) {
 
   const handleClear = useCallback(() => {
     search.clearResults();
-    setSelectedRow(null);
+    setSelectedResult(null);
     setShowPreview(false);
   }, [search]);
 
-  const selectedResult =
-    selectedRow != null ? search.results[selectedRow] : null;
+  const handleDismissError = useCallback(() => {
+    setError(null);
+    search.clearError();
+  }, [search]);
 
   return (
     <>
@@ -90,7 +93,7 @@ export default function SearchTab({ tabId }) {
           <ResultsTable
             results={search.results}
             lastQuery={search.lastQuery}
-            caseSensitive={false}
+            caseSensitive={caseSensitive}
             resultCount={search.resultCount}
             errorCount={search.errorCount}
             scanned={search.scanned}
@@ -98,8 +101,8 @@ export default function SearchTab({ tabId }) {
             isSearching={search.isSearching}
             done={search.done}
             onClear={handleClear}
-            selectedRow={selectedRow}
-            onSelectRow={handleSelectRow}
+            selectedResult={selectedResult}
+            onSelectResult={handleSelectResult}
           />
         </div>
 
@@ -110,7 +113,7 @@ export default function SearchTab({ tabId }) {
             query={search.lastQuery}
             onClose={() => {
               setShowPreview(false);
-              setSelectedRow(null);
+              setSelectedResult(null);
             }}
           />
         )}
@@ -118,7 +121,7 @@ export default function SearchTab({ tabId }) {
 
       <ErrorToast
         message={error || search.errorMessage}
-        onDismiss={() => setError(null)}
+        onDismiss={handleDismissError}
       />
     </>
   );
